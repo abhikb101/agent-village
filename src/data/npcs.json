@@ -1,0 +1,66 @@
+[
+  {
+    "name": "Merchant",
+    "x": 200,
+    "y": 200,
+    "color": [255, 0, 0],
+    "dialogueTree": {
+      "start": {
+        "text": "Welcome! Would you like to see my wares?",
+        "options": [
+          {
+            "text": "Yes, show me",
+            "nextId": "shop"
+          },
+          {
+            "text": "No, thanks",
+            "nextId": "end"
+          }
+        ]
+      },
+      "shop": {
+        "text": "Here's what I have in stock...",
+        "options": [
+          {
+            "text": "Back",
+            "nextId": "start"
+          },
+          {
+            "text": "Exit",
+            "nextId": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "Guard",
+    "x": 400,
+    "y": 300,
+    "color": [0, 0, 255],
+    "dialogueTree": {
+      "start": {
+        "text": "Halt! What brings you here?",
+        "options": [
+          {
+            "text": "Just exploring",
+            "nextId": "explore"
+          },
+          {
+            "text": "Goodbye",
+            "nextId": "end"
+          }
+        ]
+      },
+      "explore": {
+        "text": "Well, stay out of trouble.",
+        "options": [
+          {
+            "text": "Will do",
+            "nextId": "end"
+          }
+        ]
+      }
+    }
+  }
+]
