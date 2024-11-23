@@ -1,0 +1,15 @@
+{
+  "start": {
+    "text": "Hello there!",
+    "options": [
+      {
+        "text": "Goodbye",
+        "nextId": "end"
+      }
+    ]
+  },
+  "end": {
+    "text": "Farewell!",
+    "options": []
+  }
+}

@@ -1,7 +1,7 @@
 export function createPlayer(k) {
   return k.add([
     k.rect(32, 32),
-    k.pos(400, 300),
+    k.pos(k.width() / 2, k.height() / 2),
     k.color(0, 0, 255),
     k.area(),
     k.body(),

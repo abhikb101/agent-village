@@ -1,6 +1,6 @@
 export const gameConfig = {
-  width: 800,
-  height: 600,
+  width: window.innerWidth,
+  height: window.innerHeight,
   playerSpeed: 200,
   debug: true,
 };

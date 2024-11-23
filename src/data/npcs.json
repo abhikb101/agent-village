@@ -1,8 +1,8 @@
 [
   {
     "name": "Merchant",
-    "x": 200,
-    "y": 200,
+    "relativeX": 0.25,
+    "relativeY": 0.3,
     "color": [255, 0, 0],
     "dialogueTree": {
       "start": {
@@ -35,8 +35,8 @@
   },
   {
     "name": "Guard",
-    "x": 400,
-    "y": 300,
+    "relativeX": 0.75,
+    "relativeY": 0.4,
     "color": [0, 0, 255],
     "dialogueTree": {
       "start": {

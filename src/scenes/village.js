@@ -2,6 +2,10 @@ import { createPlayer } from "../entities/player";
 import { createNPC } from "../entities/npc";
 import { DialogueBox } from "../ui/DialogueBox";
 import npcsData from "../data/npcs.json";
+import { getBuildingsConfig } from "../data/buildings";
+import { createBuilding } from "../entities/building";
+import defaultDialogueTree from "../data/defaults/dialogueTree.json";
+import defaultNPC from "../data/defaults/npc.json";
 
 export function loadVillageScene(k) {
   k.scene("village", () => {
@@ -14,30 +18,47 @@ export function loadVillageScene(k) {
     // Add background
     k.add([k.rect(k.width(), k.height()), k.color(144, 238, 144), k.pos(0, 0)]);
 
+    // Create buildings
+    const buildingsConfig = getBuildingsConfig(k.width(), k.height());
+    const gameBuildings = buildingsConfig.map((buildingData) =>
+      createBuilding(k, buildingData)
+    );
+
     // Create player
     const player = createPlayer(k);
 
     // Create NPCs with error checking
     const npcs = npcsData.map((npcData) => {
+      // Apply default dialogue tree if missing
       if (!npcData.dialogueTree) {
-        console.error("Missing dialogueTree for NPC:", npcData.name);
-        // Provide default dialogue tree if missing
-        npcData.dialogueTree = {
-          start: {
-            text: "Hello there!",
-            options: [
-              {
-                text: "Goodbye",
-                nextId: "end",
-              },
-            ],
-          },
-          end: {
-            text: "Farewell!",
-            options: [],
-          },
-        };
+        console.warn(
+          `Missing dialogueTree for NPC: ${npcData.name}, using default`
+        );
+        npcData.dialogueTree = defaultDialogueTree;
       }
+
+      // Ensure relativeX/Y exist
+      if (typeof npcData.relativeX === "undefined") {
+        console.warn(
+          `Missing relativeX for NPC ${
+            npcData.name || defaultNPC.name
+          }, using default`
+        );
+        npcData.relativeX = defaultNPC.relativeX;
+      }
+
+      if (typeof npcData.relativeY === "undefined") {
+        console.warn(
+          `Missing relativeY for NPC ${
+            npcData.name || defaultNPC.name
+          }, using default`
+        );
+        npcData.relativeY = defaultNPC.relativeY;
+      }
+
+      // Merge with default NPC config
+      npcData = { ...defaultNPC, ...npcData };
+
       return createNPC(k, npcData, dialogueSystem);
     });
 
@@ -50,6 +71,20 @@ export function loadVillageScene(k) {
       k.fixed(),
       k.z(100),
     ]);
+
+    // Add building labels with adjusted positioning
+    gameBuildings.forEach((building) => {
+      k.add([
+        k.text(building.name, {
+          size: Math.floor(k.width() * 0.015), // Dynamic text size
+        }),
+        k.pos(
+          building.pos.x + building.width * 0.1, // 10% padding from building edge
+          building.pos.y - k.height() * 0.03 // 3% of screen height above building
+        ),
+        k.color(0, 0, 0),
+      ]);
+    });
 
     // Update loop
     k.onUpdate(() => {

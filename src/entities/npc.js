@@ -1,9 +1,16 @@
+import defaultNPC from "../data/defaults/npc.json";
+
 export function createNPC(k, npcData, dialogueSystem) {
-  console.log("Creating NPC with data:", npcData);
+  const x = k.width() * npcData.relativeX;
+  const y = k.height() * npcData.relativeY;
+  const size = Math.min(k.width(), k.height()) * 0.05;
+  const interactionRange =
+    Math.min(k.width(), k.height()) *
+    (npcData.interactionRange || defaultNPC.interactionRange);
 
   return k.add([
-    k.rect(32, 32),
-    k.pos(npcData.x, npcData.y),
+    k.rect(size, size),
+    k.pos(x, y),
     k.color(k.rgb(npcData.color[0], npcData.color[1], npcData.color[2])),
     k.area(),
     k.body({ isStatic: true }),
@@ -11,7 +18,7 @@ export function createNPC(k, npcData, dialogueSystem) {
     {
       name: npcData.name,
       dialogueTree: npcData.dialogueTree,
-      interactionRange: 50,
+      interactionRange,
       interact() {
         console.log("Interacting with NPC:", this.name, this.dialogueTree);
         if (this.dialogueTree && this.dialogueTree.start) {
