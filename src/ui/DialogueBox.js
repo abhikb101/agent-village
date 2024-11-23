@@ -1,11 +1,24 @@
-export class DialogueBox {
+import { BaseFSMSystem } from "../fsm/BaseFSMSystem";
+import { dialogueFSMConfig } from "../fsm/configs/dialogueFSM";
+
+export class DialogueBox extends BaseFSMSystem {
   constructor(k) {
+    super(dialogueFSMConfig, { debug: true });
     this.k = k;
     this.currentDialogue = null;
     this.currentNPC = null;
     this.dialogueBox = null;
     this.options = [];
-    this.isProcessing = false;
+    this.pendingNavigation = null;
+
+    // Add entry action handler
+    this.service.subscribe((state) => {
+      if (state.value === "idle" && this.pendingNavigation) {
+        const { npc, dialogueId } = this.pendingNavigation;
+        this.pendingNavigation = null;
+        setTimeout(() => this.show(npc, dialogueId), 0);
+      }
+    });
   }
 
   destroy() {
@@ -17,19 +30,40 @@ export class DialogueBox {
       });
       this.dialogueBox = null;
       this.options = [];
-      this.isProcessing = false;
       this.currentDialogue = null;
       this.currentNPC = null;
+
+      // Transition to idle state
+      this.send("CLEANUP");
     }
   }
 
   show(npc, dialogueId) {
-    console.log("Showing dialogue:", dialogueId, npc.dialogueTree[dialogueId]); // Debug log
+    // Only allow showing dialog from idle or transitioning states
+    const currentState = this.getState();
+    if (!["idle", "transitioning"].includes(currentState)) {
+      console.warn("Cannot show dialogue in current state:", currentState);
+      return;
+    }
 
-    this.destroy();
+    // Clean up existing dialogue if any
+    if (this.dialogueBox) {
+      this.destroy();
+    }
 
     this.currentNPC = npc;
     this.currentDialogue = npc.dialogueTree[dialogueId];
+
+    if (!this.currentDialogue) {
+      console.error(
+        `Dialogue ID "${dialogueId}" not found in NPC's dialogue tree`
+      );
+      this.send("ERROR");
+      return;
+    }
+
+    // Send SHOW event to state machine
+    this.send("SHOW");
 
     // Create dialogue box background
     this.dialogueBox = this.k.add([
@@ -95,13 +129,30 @@ export class DialogueBox {
         optionBg.color = this.k.rgb(100, 100, 100);
       });
 
-      // Click handler
+      // Click handler with state management
       optionBg.onClick(() => {
-        console.log("Clicked option:", option.nextId); // Debug log
+        if (this.getState() !== "showing") {
+          console.warn(
+            "Cannot handle click in current state:",
+            this.getState()
+          );
+          return;
+        }
+
         if (option.nextId === "end") {
+          this.send("END");
           this.destroy();
         } else {
-          this.show(this.currentNPC, option.nextId);
+          // Store the navigation target
+          this.pendingNavigation = {
+            npc: this.currentNPC,
+            dialogueId: option.nextId,
+          };
+
+          // Initiate transition
+          this.send("NAVIGATE");
+          this.destroy();
+          // Navigation will continue in idle state's entry action
         }
       });
 
@@ -112,12 +163,16 @@ export class DialogueBox {
     // Add ESC to close dialogue
     this.k.onKeyPress("escape", () => {
       if (this.isActive()) {
+        this.send("END");
         this.destroy();
       }
     });
   }
 
   isActive() {
-    return this.dialogueBox !== null;
+    return (
+      this.dialogueBox !== null &&
+      ["showing", "transitioning"].includes(this.getState())
+    );
   }
 }
